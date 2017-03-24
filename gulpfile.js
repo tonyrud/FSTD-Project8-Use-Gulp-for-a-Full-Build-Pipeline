@@ -19,18 +19,11 @@ const options = {
   }
 }
 
-/*  -------------------
-  Reload Browser
---------------------- */
-// build sass, then reload the page
-gulp.task('reload', ['buildSass'], (done) => {
-  browserSync.reload()
-  done()
-})
 
 /*  -------------------
-process sass
+Styles tasks
 --------------------- */
+
 gulp.task('styles', () => {
   return gulp.src('./sass/**/*.scss')
     .pipe(maps.init())
@@ -39,21 +32,38 @@ gulp.task('styles', () => {
     .pipe(gulp.dest('./dist/styles'))
 })
 
-/* -------------------
-Browser sync watch files and server start
+/*  -------------------
+  Server and browsersync
 --------------------- */
-gulp.task('gulp-serve', () => {
+
+gulp.task('serve', () => {
   browserSync.init({
     server: {
-      baseDir: './'
+      baseDir: './dist'
     }
   })
+  gulp.start('watch')
+})
+
+gulp.task('watch', () => {
   gulp.watch('*.html', ['reload'])
   gulp.watch('sass/*/*.scss', ['reload'])
   gulp.watch('js/*.js', ['reload'])
 })
 
-gulp.task('concat', () => {
+// build sass and scripts, then reload the page
+gulp.task('reload', ['styles', 'scripts'], (done) => {
+  browserSync.reload()
+  done()
+})
+
+/*  -------------------
+Scripts tasks
+--------------------- */
+
+gulp.task('scripts', ['concatScripts', 'minifyScripts'])
+
+gulp.task('concatScripts', () => {
   return gulp.src([
     './js/*.js',
     './js/circle/*.js'
@@ -65,17 +75,16 @@ gulp.task('concat', () => {
   // .pipe(gulp.dest('./maps'))
 })
 
-gulp.task('minifyScripts', ['concat'], () => {
+gulp.task('minifyScripts', ['concatScripts'], () => {
   return gulp.src(`${options.directories.scripts}/*.js`)
     .pipe(gulpUglify())
     .pipe(rename('all.min.js'))
     .pipe(gulp.dest(options.directories.scripts))
 })
 
-gulp.task('clean', () => {
-  return gulp.src(`${options.directories.build}/*`, {read: false})
-    .pipe(clean())
-})
+/*  -------------------
+Image tasks
+--------------------- */
 
 gulp.task('images', () => {
   gulp.src('images/*')
@@ -83,10 +92,21 @@ gulp.task('images', () => {
       .pipe(gulp.dest(options.directories.images))
 })
 
-gulp.task('build', ['clean', 'scripts', 'styles', 'images'])
+/*  -------------------
+Project management tasks
+--------------------- */
 
-gulp.task('scripts', ['concat', 'minifyScripts'])
+gulp.task('build', ['clean'], () => {
+  gulp.start('scripts')
+  gulp.start('styles')
+  gulp.start('images')
+})
+
+gulp.task('clean', () => {
+  return gulp.src(`${options.directories.build}/*`, {read: false})
+    .pipe(clean())
+})
 
 gulp.task('default', () => {
-  gulp.start('gulp-serve')
+  gulp.start('build')
 })
