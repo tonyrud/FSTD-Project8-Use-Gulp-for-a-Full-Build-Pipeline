@@ -9,9 +9,11 @@ const sass = require('gulp-sass')
 const maps = require('gulp-sourcemaps')
 const clean = require('gulp-clean')
 const imagemin = require('gulp-clean')
+const eslint = require('gulp-eslint')
+const changed = require('gulp-changed')
 
 const options = {
-  directories: {
+  buildDir: {
     build: `./dist`,
     scripts: `./dist/scripts`,
     styles: `./dist/styles`,
@@ -28,6 +30,7 @@ gulp.task('styles', () => {
   return gulp.src('./sass/**/*.scss')
     .pipe(maps.init())
     .pipe(sass().on('error', sass.logError))
+    .pipe(rename('all.min.css'))
     .pipe(maps.write('./'))
     .pipe(gulp.dest('./dist/styles'))
 })
@@ -69,17 +72,22 @@ gulp.task('concatScripts', () => {
     './js/circle/*.js'
   ])
   .pipe(maps.init())
-  .pipe(gulpConcat('all.js'))
-  .pipe(maps.write('./maps'))
+  .pipe(gulpConcat('all.min.js'))
+  .pipe(maps.write('./'))
   .pipe(gulp.dest('./dist/scripts'))
-  // .pipe(gulp.dest('./maps'))
 })
 
-gulp.task('minifyScripts', ['concatScripts'], () => {
-  return gulp.src(`${options.directories.scripts}/*.js`)
+gulp.task('lintScripts', ['concatScripts'], () => {
+  return gulp.src('./js/**/*.js')
+        .pipe(eslint())
+        .pipe(eslint.format())
+        .pipe(eslint.failAfterError())
+})
+
+gulp.task('minifyScripts', ['lintScripts'], () => {
+  return gulp.src(`${options.buildDir.scripts}/*.js`)
     .pipe(gulpUglify())
-    .pipe(rename('all.min.js'))
-    .pipe(gulp.dest(options.directories.scripts))
+    .pipe(gulp.dest(options.buildDir.scripts))
 })
 
 /*  -------------------
@@ -87,9 +95,10 @@ Image tasks
 --------------------- */
 
 gulp.task('images', () => {
-  gulp.src('images/*')
+  gulp.src('./images/*')
+      .pipe(changed('./dist/content'))
       .pipe(imagemin())
-      .pipe(gulp.dest(options.directories.images))
+      .pipe(gulp.dest('./dist/content'))
 })
 
 /*  -------------------
@@ -103,10 +112,12 @@ gulp.task('build', ['clean'], () => {
 })
 
 gulp.task('clean', () => {
-  return gulp.src(`${options.directories.build}/*`, {read: false})
+  return gulp.src(`${options.buildDir.build}/*`, {read: false})
     .pipe(clean())
 })
 
 gulp.task('default', () => {
   gulp.start('build')
+  gulp.src('index.html')
+      .pipe(gulp.dest('./dist/'))
 })
