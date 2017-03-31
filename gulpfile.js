@@ -8,9 +8,8 @@ const rename = require('gulp-rename')
 const sass = require('gulp-sass')
 const maps = require('gulp-sourcemaps')
 const clean = require('gulp-clean')
-const imagemin = require('gulp-clean')
+const imagemin = require('gulp-imagemin')
 const eslint = require('gulp-eslint')
-const changed = require('gulp-changed')
 
 const options = {
   buildDir: {
@@ -21,7 +20,6 @@ const options = {
   }
 }
 
-
 /*  -------------------
 Styles tasks
 --------------------- */
@@ -29,7 +27,7 @@ Styles tasks
 gulp.task('styles', () => {
   return gulp.src('./sass/**/*.scss')
     .pipe(maps.init())
-    .pipe(sass().on('error', sass.logError))
+    .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
     .pipe(rename('all.min.css'))
     .pipe(maps.write('./'))
     .pipe(gulp.dest('./dist/styles'))
@@ -39,16 +37,15 @@ gulp.task('styles', () => {
   Server and browsersync
 --------------------- */
 
-gulp.task('serve', () => {
+gulp.task('serve', ['build'], () => {
   browserSync.init({
     server: {
       baseDir: './dist'
     }
   })
-  gulp.start('watch')
 })
 
-gulp.task('watch', () => {
+gulp.task('watch', ['serve'], () => {
   gulp.watch('*.html', ['reload'])
   gulp.watch('sass/*/*.scss', ['reload'])
   gulp.watch('js/*.js', ['reload'])
@@ -95,8 +92,7 @@ Image tasks
 --------------------- */
 
 gulp.task('images', () => {
-  gulp.src('./images/*')
-      .pipe(changed('./dist/content'))
+  return gulp.src('./images/*')
       .pipe(imagemin())
       .pipe(gulp.dest('./dist/content'))
 })
@@ -106,9 +102,13 @@ Project management tasks
 --------------------- */
 
 gulp.task('build', ['clean'], () => {
+  gulp.start('images')
   gulp.start('scripts')
   gulp.start('styles')
-  gulp.start('images')
+  gulp.src('index.html')
+      .pipe(gulp.dest('./dist/'))
+  gulp.src('icons/*')
+      .pipe(gulp.dest('./dist/icons'))
 })
 
 gulp.task('clean', () => {
@@ -118,6 +118,4 @@ gulp.task('clean', () => {
 
 gulp.task('default', () => {
   gulp.start('build')
-  gulp.src('index.html')
-      .pipe(gulp.dest('./dist/'))
 })
