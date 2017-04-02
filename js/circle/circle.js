@@ -1,7 +1,7 @@
 $( document ).ready(function() {
 
   $('textarea').autogrow({onInitialize: true});
-
+  console.log('circle loaded')
 
   //Cloner for infinite input lists
   $(".circle--clone--list").on("click", ".circle--clone--add", function(){

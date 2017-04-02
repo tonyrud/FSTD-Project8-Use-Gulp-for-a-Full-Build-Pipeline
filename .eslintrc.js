@@ -6,6 +6,9 @@ module.exports = {
         "jquery": true
     },
     "extends": "eslint:recommended",
-    "rules": {      
+    "rules": { 
+        "no-console": 0,
+        "no-debugger": 0, 
+        "no-unused-vars": 0 
     }
 };

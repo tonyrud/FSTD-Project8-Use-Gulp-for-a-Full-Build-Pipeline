@@ -47,8 +47,8 @@ gulp.task('serve', ['build'], () => {
 
 gulp.task('watch', ['serve'], () => {
   gulp.watch('*.html', ['reload'])
-  gulp.watch('sass/*/*.scss', ['reload'])
-  gulp.watch('js/*.js', ['reload'])
+  gulp.watch('sass/**/*.scss', ['reload'])
+  gulp.watch('js/**/*.js', ['reload'])
 })
 
 // build sass and scripts, then reload the page
@@ -65,8 +65,7 @@ gulp.task('scripts', ['concatScripts', 'minifyScripts'])
 
 gulp.task('concatScripts', () => {
   return gulp.src([
-    './js/*.js',
-    './js/circle/*.js'
+    './js/**/*.js'
   ])
   .pipe(maps.init())
   .pipe(gulpConcat('all.min.js'))
